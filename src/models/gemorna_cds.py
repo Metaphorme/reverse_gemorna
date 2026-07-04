@@ -2,15 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from config import *
-import platform
-import platform
-if platform.system() == "Darwin":
-    from shared.libg2m import *
-elif platform.system() == "Linux":
-    from shared.mod_xzr01 import *
-else:
-    raise RuntimeError("Unsupported OS")
 from utils.utils_cds import *
+
+max_length = 187
 
 
 class Encoder(nn.Module):
