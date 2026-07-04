@@ -1,5 +1,6 @@
 *.pyc
 .vscode/*
 .claude/*
+docs/superpowers/*
 CLAUDE.md
 AGENTS.md
