@@ -1,0 +1,88 @@
+name: gemorna
+version: "0.1.0"
+description: "GemORNA RNA 生成与 UTR 评分工具"
+adapter: adapter.py
+container:
+  image: images/gemorna.sandbox
+  workdir: ""
+  binds: []
+modes:
+  - exec
+  - worker
+functions:
+  generate_cds_open:
+    description: "使用开放 Python 实现从蛋白序列生成 CDS"
+    input_schema:
+      type: object
+      properties:
+        protein_sequence:
+          type: string
+        seed:
+          type: integer
+      required:
+        - protein_sequence
+    output_schema:
+      type: object
+  generate_cds_closed:
+    description: "使用闭源扩展实现从蛋白序列生成 CDS"
+    input_schema:
+      type: object
+      properties:
+        protein_sequence:
+          type: string
+        seed:
+          type: integer
+      required:
+        - protein_sequence
+    output_schema:
+      type: object
+  generate_5utr:
+    description: "生成 5UTR 并用对应 predictor 评分"
+    input_schema:
+      type: object
+      properties:
+        length:
+          type: string
+          enum: ["short", "medium", "long"]
+        seed:
+          type: integer
+      required:
+        - length
+    output_schema:
+      type: object
+  generate_3utr:
+    description: "生成 3UTR 并用对应 predictor 评分"
+    input_schema:
+      type: object
+      properties:
+        length:
+          type: string
+          enum: ["short", "medium", "long"]
+        seed:
+          type: integer
+      required:
+        - length
+    output_schema:
+      type: object
+  score_5utr:
+    description: "对输入 5UTR 序列评分"
+    input_schema:
+      type: object
+      properties:
+        sequence:
+          type: string
+      required:
+        - sequence
+    output_schema:
+      type: object
+  score_3utr:
+    description: "对输入 3UTR 序列评分"
+    input_schema:
+      type: object
+      properties:
+        sequence:
+          type: string
+      required:
+        - sequence
+    output_schema:
+      type: object

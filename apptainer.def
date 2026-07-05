@@ -1,0 +1,25 @@
+Bootstrap: docker
+From: continuumio/miniconda3:24.5.0-0
+
+%post
+    set -e
+    apt-get update
+    apt-get install -y --no-install-recommends curl ca-certificates build-essential
+    rm -rf /var/lib/apt/lists/*
+    conda env create -f /app/environment.yaml
+    conda clean -afy
+
+%environment
+    export PYTHONDONTWRITEBYTECODE=1
+    export PYTHONUNBUFFERED=1
+    export PATH=/opt/conda/envs/gemorna/bin:$PATH
+
+%files
+    environment.yaml /app/environment.yaml
+    src /app/src
+    checkpoints /app/checkpoints
+    vocab /app/vocab
+    adapter.py /app/adapter.py
+
+%runscript
+    exec /opt/conda/envs/gemorna/bin/python /app/adapter.py "$@"
