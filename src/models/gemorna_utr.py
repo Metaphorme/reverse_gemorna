@@ -4,6 +4,7 @@ from torch.nn import functional as F
 import math
 from config import *
 
+
 class LayerNorm(nn.Module):
     def __init__(self, ndim, bias):
         super().__init__()
@@ -12,6 +13,7 @@ class LayerNorm(nn.Module):
 
     def forward(self, input):
         return F.layer_norm(input, self.weight.shape, self.weight, self.bias, 1e-5)
+
 
 class MLP(nn.Module):
     def __init__(self, cfg):
@@ -28,6 +30,7 @@ class MLP(nn.Module):
         x = self.dropout(x)
         return x
 
+
 class Attention(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -38,9 +41,11 @@ class Attention(nn.Module):
         self.c_proj = nn.Linear(self.embed_dim, self.embed_dim, bias=config.bias)
         self.attention_dropout = nn.Dropout(self.dropout_prob)
         self.residual_dropout = nn.Dropout(self.dropout_prob)
-        self.flash = hasattr(F, 'scaled_dot_product_attention')
+        self.flash = hasattr(F, "scaled_dot_product_attention")
         if not self.flash:
-            print("WARNING: using slow attention. Flash Attention requires PyTorch >= 2.0")
+            print(
+                "WARNING: using slow attention. Flash Attention requires PyTorch >= 2.0"
+            )
             tril = torch.tril(torch.ones(config.block_size, config.block_size))
             tril = tril.view(1, 1, config.block_size, config.block_size)
             self.register_buffer("causal_mask", tril)
@@ -52,19 +57,23 @@ class Attention(nn.Module):
         head_dim = emb_dim // self.n_heads
 
         def shape_proj(tensor):
-            return tensor.view(batch_sz, seq_len, self.n_heads, head_dim).transpose(1, 2)
+            return tensor.view(batch_sz, seq_len, self.n_heads, head_dim).transpose(
+                1, 2
+            )
 
         queries = shape_proj(q_proj)
         keys = shape_proj(k_proj)
         values = shape_proj(v_proj)
 
         if self.flash:
-            y = torch.nn.functional.scaled_dot_product_attention(queries, keys, values, attn_mask=None, dropout_p=0, is_causal=True)
+            y = torch.nn.functional.scaled_dot_product_attention(
+                queries, keys, values, attn_mask=None, dropout_p=0, is_causal=True
+            )
         else:
             scaling = 1.0 / math.sqrt(head_dim)
             sim_matrix = torch.matmul(queries, keys.transpose(-2, -1)) * scaling
             mask = self.causal_mask[:, :, :seq_len, :seq_len]
-            sim_matrix = sim_matrix.masked_fill(mask == 0, float('-inf'))
+            sim_matrix = sim_matrix.masked_fill(mask == 0, float("-inf"))
             attention = F.softmax(sim_matrix, dim=-1)
             attention = self.attention_dropout(attention)
             y = torch.matmul(attention, values)
@@ -73,6 +82,7 @@ class Attention(nn.Module):
         x = self.c_proj(y)
         x = self.residual_dropout(x)
         return x
+
 
 class DecoderBlock(nn.Module):
     def __init__(self, config):
@@ -89,7 +99,5 @@ class DecoderBlock(nn.Module):
         x2 = self.ln_2(x)
         mlp_output = self.mlp(x2)
         x = x + mlp_output
-        
+
         return x
-
-

@@ -218,7 +218,9 @@ class ClosedCDSGenerator:
     def __init__(self, ckpt_path=DEFAULT_CDS_CKPT, device=None):
         import torch
 
-        self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = device or torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )
         self.prot_vocab, self.cds_vocab = _load_cds_vocabularies()
         self.model = build_closed_cds_model(ckpt_path=ckpt_path, device=self.device)
 
@@ -247,11 +249,18 @@ class ClosedCDSGenerator:
                 tokens = [init_token] + protein_tokens + [eos_token]
                 prot_indexes = [_stoi(self.prot_vocab, token) for token in tokens]
 
-                prot_tensor = torch.LongTensor(prot_indexes).unsqueeze(0).to(self.device)
+                prot_tensor = (
+                    torch.LongTensor(prot_indexes).unsqueeze(0).to(self.device)
+                )
                 prot_mask = self.model.make_prot_mask(prot_tensor)
                 enc_prot = self.model.encoder(prot_tensor, prot_mask)
                 generated_seq, model_score = self.model.sampling(
-                    enc_prot, prot_mask, tokens, self.cds_vocab, self.device, sampling_seed
+                    enc_prot,
+                    prot_mask,
+                    tokens,
+                    self.cds_vocab,
+                    self.device,
+                    sampling_seed,
                 )
                 generated_seqs.extend(generated_seq)
                 final_modelscore += model_score
@@ -278,7 +287,9 @@ class ClosedUTRGenerator:
     def __init__(self, device=None):
         import torch
 
-        self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = device or torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )
         self._models = {}
 
     def _get_model_and_vocab(self, utr_type: str):
@@ -301,7 +312,11 @@ class ClosedUTRGenerator:
         sampling_seed = _sampling_seed(seed) if seed is not None else None
 
         buffer = io.StringIO()
-        with contextlib.redirect_stdout(buffer), torch.no_grad(), _temporary_random_seed(seed):
+        with (
+            contextlib.redirect_stdout(buffer),
+            torch.no_grad(),
+            _temporary_random_seed(seed),
+        ):
             model.gen(utr_type, vocab, self.device, length)
 
         sequence = parse_generated_utr_output(buffer.getvalue())
@@ -319,10 +334,16 @@ class UTRScorer:
         import torch
 
         self.utr_type = validate_utr_type(utr_type)
-        self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = device or torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )
         self.ckpt_path = resolve_path(
             ckpt_path
-            or (DEFAULT_5UTR_PRED_CKPT if self.utr_type == "5utr" else DEFAULT_3UTR_PRED_CKPT)
+            or (
+                DEFAULT_5UTR_PRED_CKPT
+                if self.utr_type == "5utr"
+                else DEFAULT_3UTR_PRED_CKPT
+            )
         )
         self.model = self._build_model()
 
@@ -352,7 +373,9 @@ class UTRScorer:
             )
 
         predictor = model_module.Model(args).to(self.device)
-        predictor.load_state_dict(torch.load(self.ckpt_path, map_location=self.device), strict=True)
+        predictor.load_state_dict(
+            torch.load(self.ckpt_path, map_location=self.device), strict=True
+        )
         predictor.eval()
         return predictor
 
@@ -363,7 +386,9 @@ class UTRScorer:
         normalized = normalize_utr_sequence(sequence)
         tokenized_seq = helper.tokenize(normalized)
         if self.utr_type == "5utr":
-            padded = tokenized_seq + [helper.vocab["[PAD]"]] * max(0, 100 - len(tokenized_seq))
+            padded = tokenized_seq + [helper.vocab["[PAD]"]] * max(
+                0, 100 - len(tokenized_seq)
+            )
             model_input = torch.tensor([padded], device=self.device)
         else:
             model_input = torch.tensor([tokenized_seq], device=self.device)

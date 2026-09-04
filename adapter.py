@@ -47,7 +47,9 @@ def _to_jsonable(value: Any) -> Any:
     return value
 
 
-def call_with_service(service, function: str, payload: dict[str, Any]) -> dict[str, Any]:
+def call_with_service(
+    service, function: str, payload: dict[str, Any]
+) -> dict[str, Any]:
     seed = payload.get("seed")
     if function == "generate_cds_open":
         result = service.generate_cds_open(payload["protein_sequence"], seed=seed)

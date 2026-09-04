@@ -114,7 +114,9 @@ class OpenCDSGenerator:
     """Reusable open CDS generator loaded from a checkpoint."""
 
     def __init__(self, ckpt_path=DEFAULT_CKPT_PATH, device=None):
-        self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = device or torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )
         self.prot_vocab, self.cds_vocab = _load_vocabularies()
         self.model = build_open_cds_model(ckpt_path=ckpt_path, device=self.device)
 

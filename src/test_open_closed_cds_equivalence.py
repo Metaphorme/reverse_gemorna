@@ -85,7 +85,10 @@ def compare_logits(closed_logits, open_logits):
     max_diff = 0.0
     for step, (closed, open_) in enumerate(zip(closed_logits, open_logits)):
         if closed.shape != open_.shape:
-            return False, f"step {step} shape {tuple(closed.shape)} != {tuple(open_.shape)}"
+            return (
+                False,
+                f"step {step} shape {tuple(closed.shape)} != {tuple(open_.shape)}",
+            )
         diff = (closed - open_).abs().max().item()
         max_diff = max(max_diff, diff)
         if not torch.allclose(closed, open_, atol=1e-6, rtol=1e-5):
@@ -192,7 +195,11 @@ def main():
             open_naturalness = f"{open_result.naturalness:.2f}"
             if closed_dna != open_result.dna_sequence:
                 failures.append(
-                    (name, seed, f"dna differs: closed={closed_dna} open={open_result.dna_sequence}")
+                    (
+                        name,
+                        seed,
+                        f"dna differs: closed={closed_dna} open={open_result.dna_sequence}",
+                    )
                 )
             if closed_naturalness != open_naturalness:
                 failures.append(
@@ -203,9 +210,13 @@ def main():
                     )
                 )
             if open_result.rna_sequence != open_result.dna_sequence.replace("T", "U"):
-                failures.append((name, seed, "RNA sequence is not DNA sequence with T->U"))
+                failures.append(
+                    (name, seed, "RNA sequence is not DNA sequence with T->U")
+                )
             if function_result != open_result:
-                failures.append((name, seed, "function API result differs from generator API"))
+                failures.append(
+                    (name, seed, "function API result differs from generator API")
+                )
 
             if not args.skip_logits:
                 logits_match, message = compare_logits(closed_logits, open_logits)

@@ -12,8 +12,7 @@ CDS_CHUNK_LENGTH = 170
 def trunc_protein_seq(seq):
     seq = seq.lower()
     return [
-        seq[i:i + CDS_CHUNK_LENGTH]
-        for i in range(0, len(seq), CDS_CHUNK_LENGTH)
+        seq[i : i + CDS_CHUNK_LENGTH] for i in range(0, len(seq), CDS_CHUNK_LENGTH)
     ] or [seq]
 
 
@@ -32,9 +31,12 @@ class CDS_(nn.Module):
     def make_cds_mask(self, cds):
         cds_pad_mask = (cds != self.cds_pad_idx).unsqueeze(1).unsqueeze(2)
         cds_len = cds.shape[1]
-        cds_sub_mask = torch.tril(torch.ones((cds_len, cds_len), device=self.device)).bool()
+        cds_sub_mask = torch.tril(
+            torch.ones((cds_len, cds_len), device=self.device)
+        ).bool()
         cds_mask = cds_pad_mask & cds_sub_mask
         return cds_mask
+
     # 注：这里源码应该有笔误，prot 应对应的是 protein_input，cds 应对应的是 cds_input
     # def forward(self, prot, cds):
     #     protein_mask = self.make_prot_mask(protein_input)
@@ -50,7 +52,9 @@ class CDS_(nn.Module):
         protein_mask = self.make_prot_mask(prot)
         cds_mask = self.make_cds_mask(cds)
         encoded_protein = self.encoder(prot, protein_mask)
-        decoded_output, attn_weights = self.decoder(cds, encoded_protein, cds_mask, protein_mask)
+        decoded_output, attn_weights = self.decoder(
+            cds, encoded_protein, cds_mask, protein_mask
+        )
         return decoded_output, attn_weights
 
     @staticmethod
@@ -127,11 +131,10 @@ class CDS_(nn.Module):
             generated_seqs.extend(generated_seq)
             final_modelscore += model_score
 
-        final_seq = ''.join(generated_seqs).upper()
+        final_seq = "".join(generated_seqs).upper()
         final_naturalness = math.exp(final_modelscore / len(generated_seqs))
 
-        print(f'\nGenerated CDS & Naturalness')
-        print(f'{final_seq} {final_naturalness:.2f}\n')
+        print(f"\nGenerated CDS & Naturalness")
+        print(f"{final_seq} {final_naturalness:.2f}\n")
 
         return None
-        

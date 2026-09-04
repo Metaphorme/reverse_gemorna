@@ -1,17 +1,29 @@
 name: gemorna
-version: "0.1.0"
-description: "GemORNA RNA 生成与 UTR 评分工具"
+version: 0.1.0
+description: GemORNA RNA 生成与 UTR 评分工具
 adapter: adapter.py
 container:
   image: images/gemorna.sandbox
-  workdir: ""
+  workdir: ''
   binds: []
 modes:
-  - exec
-  - worker
+- exec
+- worker
+x-read-only-closed: &id001
+  readOnlyHint: true
+  destructiveHint: false
+  idempotentHint: true
+  openWorldHint: false
 functions:
   generate_cds_open:
-    description: "使用开放 Python 实现从蛋白序列生成 CDS"
+    exposure: draft
+    resources:
+      default_wall_time_seconds: 600
+      max_wall_time_seconds: 7200
+      default_storage_bytes: 8388608
+      max_output_bytes: 8388608
+    annotations: *id001
+    description: 使用开放 Python 实现从蛋白序列生成 CDS
     input_schema:
       type: object
       properties:
@@ -20,11 +32,23 @@ functions:
         seed:
           type: integer
       required:
-        - protein_sequence
+      - protein_sequence
+      additionalProperties: false
     output_schema:
       type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    draft_reason: 输出合同尚未按真实 adapter 结果递归闭合；完成确定性完整路径验证后再暴露
   generate_cds_closed:
-    description: "使用闭源扩展实现从蛋白序列生成 CDS"
+    exposure: draft
+    resources:
+      default_wall_time_seconds: 600
+      max_wall_time_seconds: 7200
+      default_storage_bytes: 8388608
+      max_output_bytes: 8388608
+    annotations: *id001
+    description: 使用闭源扩展实现从蛋白序列生成 CDS
     input_schema:
       type: object
       properties:
@@ -33,56 +57,115 @@ functions:
         seed:
           type: integer
       required:
-        - protein_sequence
+      - protein_sequence
+      additionalProperties: false
     output_schema:
       type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    draft_reason: 输出合同尚未按真实 adapter 结果递归闭合；完成确定性完整路径验证后再暴露
   generate_5utr:
-    description: "生成 5UTR 并用对应 predictor 评分"
+    exposure: draft
+    resources:
+      default_wall_time_seconds: 600
+      max_wall_time_seconds: 7200
+      default_storage_bytes: 8388608
+      max_output_bytes: 8388608
+    annotations: *id001
+    description: 生成 5UTR 并用对应 predictor 评分
     input_schema:
       type: object
       properties:
         length:
           type: string
-          enum: ["short", "medium", "long"]
+          enum:
+          - short
+          - medium
+          - long
         seed:
           type: integer
       required:
-        - length
+      - length
+      additionalProperties: false
     output_schema:
       type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    draft_reason: 输出合同尚未按真实 adapter 结果递归闭合；完成确定性完整路径验证后再暴露
   generate_3utr:
-    description: "生成 3UTR 并用对应 predictor 评分"
+    exposure: draft
+    resources:
+      default_wall_time_seconds: 600
+      max_wall_time_seconds: 7200
+      default_storage_bytes: 8388608
+      max_output_bytes: 8388608
+    annotations: *id001
+    description: 生成 3UTR 并用对应 predictor 评分
     input_schema:
       type: object
       properties:
         length:
           type: string
-          enum: ["short", "medium", "long"]
+          enum:
+          - short
+          - medium
+          - long
         seed:
           type: integer
       required:
-        - length
+      - length
+      additionalProperties: false
     output_schema:
       type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    draft_reason: 输出合同尚未按真实 adapter 结果递归闭合；完成确定性完整路径验证后再暴露
   score_5utr:
-    description: "对输入 5UTR 序列评分"
+    exposure: draft
+    resources:
+      default_wall_time_seconds: 600
+      max_wall_time_seconds: 7200
+      default_storage_bytes: 8388608
+      max_output_bytes: 8388608
+    annotations: *id001
+    description: 对输入 5UTR 序列评分
     input_schema:
       type: object
       properties:
         sequence:
           type: string
       required:
-        - sequence
+      - sequence
+      additionalProperties: false
     output_schema:
       type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    draft_reason: 输出合同尚未按真实 adapter 结果递归闭合；完成确定性完整路径验证后再暴露
   score_3utr:
-    description: "对输入 3UTR 序列评分"
+    exposure: draft
+    resources:
+      default_wall_time_seconds: 600
+      max_wall_time_seconds: 7200
+      default_storage_bytes: 8388608
+      max_output_bytes: 8388608
+    annotations: *id001
+    description: 对输入 3UTR 序列评分
     input_schema:
       type: object
       properties:
         sequence:
           type: string
       required:
-        - sequence
+      - sequence
+      additionalProperties: false
     output_schema:
       type: object
+      properties: {}
+      required: []
+      additionalProperties: false
+    draft_reason: 输出合同尚未按真实 adapter 结果递归闭合；完成确定性完整路径验证后再暴露
