@@ -17,6 +17,7 @@ x-read-only-closed: &id001
 functions:
   generate_cds_open:
     exposure: draft
+    lifecycle: {kind: local}
     resources:
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
@@ -42,6 +43,7 @@ functions:
     draft_reason: 输出合同尚未按真实 adapter 结果递归闭合；完成确定性完整路径验证后再暴露
   generate_cds_closed:
     exposure: draft
+    lifecycle: {kind: local}
     resources:
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
@@ -67,6 +69,7 @@ functions:
     draft_reason: 输出合同尚未按真实 adapter 结果递归闭合；完成确定性完整路径验证后再暴露
   generate_5utr:
     exposure: draft
+    lifecycle: {kind: local}
     resources:
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
@@ -96,6 +99,7 @@ functions:
     draft_reason: 输出合同尚未按真实 adapter 结果递归闭合；完成确定性完整路径验证后再暴露
   generate_3utr:
     exposure: draft
+    lifecycle: {kind: local}
     resources:
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
@@ -125,6 +129,7 @@ functions:
     draft_reason: 输出合同尚未按真实 adapter 结果递归闭合；完成确定性完整路径验证后再暴露
   score_5utr:
     exposure: draft
+    lifecycle: {kind: local}
     resources:
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
@@ -148,6 +153,7 @@ functions:
     draft_reason: 输出合同尚未按真实 adapter 结果递归闭合；完成确定性完整路径验证后再暴露
   score_3utr:
     exposure: draft
+    lifecycle: {kind: local}
     resources:
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
