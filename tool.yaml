@@ -19,6 +19,7 @@ functions:
     exposure: draft
     lifecycle: {kind: local}
     resources:
+      memory_bytes: 17179869184
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
       default_storage_bytes: 8388608
@@ -45,6 +46,7 @@ functions:
     exposure: draft
     lifecycle: {kind: local}
     resources:
+      memory_bytes: 17179869184
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
       default_storage_bytes: 8388608
@@ -71,6 +73,7 @@ functions:
     exposure: draft
     lifecycle: {kind: local}
     resources:
+      memory_bytes: 17179869184
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
       default_storage_bytes: 8388608
@@ -101,6 +104,7 @@ functions:
     exposure: draft
     lifecycle: {kind: local}
     resources:
+      memory_bytes: 17179869184
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
       default_storage_bytes: 8388608
@@ -131,6 +135,7 @@ functions:
     exposure: draft
     lifecycle: {kind: local}
     resources:
+      memory_bytes: 17179869184
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
       default_storage_bytes: 8388608
@@ -155,6 +160,7 @@ functions:
     exposure: draft
     lifecycle: {kind: local}
     resources:
+      memory_bytes: 17179869184
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
       default_storage_bytes: 8388608
