@@ -1,84 +1,205 @@
 name: gemorna
-version: 0.1.0
-description: GemORNA RNA 生成与 UTR 评分工具
+version: 0.2.0
+description: GEMORNA RNA 生成与 UTR 评分工具
+description_en: GEMORNA RNA generation and UTR scoring tool
+doc:
+  purpose: GEMORNA 的 RNA 生成与 UTR 评分能力：从蛋白序列生成 CDS，按 short、medium、long 档位生成 5UTR 与 3UTR 并用对应 predictor 评分，以及对已有 5UTR 或 3UTR
+    序列给出模型分数。服务对象是需要在计算流程中生成或筛选 UTR 序列的科研用户；分数是模型预测值，不是表达量实验测量结果。
+  purpose_en: 'GEMORNA RNA generation and UTR scoring: generate a CDS from a protein sequence, generate 5UTR and 3UTR at the
+    short, medium or long presets with predictors scores, and score existing 5UTR or 3UTR sequences. It serves researchers
+    generating or filtering UTR sequences in pipelines; scores are model predictions, not measured expression.'
+  notes:
+  - 生成依赖 gemorna_cds.pt、gemorna_5utr.pt、gemorna_3utr.pt；UTR 评分另需 5utr.pt、3utr.pt。运行仅使用 CPU。
+  - 蛋白输入限 1–1024 个标准氨基酸，可在末尾加 *；UTR 评分输入限 4096 nt，3UTR 至少 10 nt。T 自动转为 U。
+  - 许可证只授予非商业研究用途，禁止商业使用与再分发（按惯例发表学术成果除外）；以部署许可为准。
+  - CDS 生成存在开源实现与闭源扩展两条路径，比较或引用结果时需要说明使用了哪一条。
+  - 生成与评分依赖 checkpoint 与随机种子，同一输入在不同 seed 下会得到不同序列或分数。
+  notes_en:
+  - Generation uses gemorna_cds.pt, gemorna_5utr.pt and gemorna_3utr.pt; UTR scoring additionally requires 5utr.pt and 3utr.pt.
+    Execution uses CPU only.
+  - Protein inputs accept 1–1024 standard amino-acid symbols with an optional terminal *. UTR scoring accepts up to 4096 nt;
+    3UTR requires at least 10 nt. T is normalized to U.
+  - The licence grants non-commercial research use only; commercial use and redistribution are prohibited outside standard
+    academic publication practice - verify with the deployment licence.
+  - CDS generation has both an open Python implementation and a closed-source extension, so any comparison or citation must
+    state which path produced the result.
+  - Generation and scoring depend on checkpoints and random seeds, so the same input can yield different sequences or scores.
+license:
+  name: GEMORNA non-commercial research licence
+  url: https://github.com/RainaBio/GEMORNA
+  note: 上游只授予非商业研究用途，禁止商业使用（含商业研究、产品开发、咨询与内部业务）与再分发，学术发表除外；本仓库不随发行再分发该模型与代码。以部署许可为准。
+  note_en: Upstream grants non-commercial research use only and prohibits commercial use, including commercial research, product
+    development, consulting and internal business operations, as well as redistribution outside academic publication practice;
+    this repository does not redistribute the model or code. Verify with the deployment licence.
+  status: restricted
+  source:
+  - tools/gemorna/LICENSE
+  - tools/gemorna/README_OLD.md
+  - https://github.com/RainaBio/GEMORNA
 adapter: adapter.py
 container:
   image: images/gemorna.sandbox
   workdir: ''
   binds: []
+  gpu: false
 modes:
 - exec
 - worker
-x-read-only-closed: &id001
+x-read-only-closed:
   readOnlyHint: true
   destructiveHint: false
   idempotentHint: true
   openWorldHint: false
 functions:
   generate_cds_open:
-    exposure: draft
-    lifecycle: {kind: local}
+    exposure: exposed
+    lifecycle:
+      kind: local
     resources:
       memory_bytes: 17179869184
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
-      default_storage_bytes: 8388608
+      default_storage_bytes: 67108864
       max_output_bytes: 8388608
-    annotations: *id001
+      cpu_count: 2
+    annotations:
+      readOnlyHint: true
+      destructiveHint: false
+      idempotentHint: false
+      openWorldHint: false
     description: 使用开放 Python 实现从蛋白序列生成 CDS
     input_schema:
       type: object
       properties:
         protein_sequence:
           type: string
+          minLength: 1
+          maxLength: 1024
+          pattern: ^[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy]+\*?$
         seed:
           type: integer
+          minimum: 0
+          maximum: 2147483647
+          description: 可选随机种子；省略时生成结果可能变化。
       required:
       - protein_sequence
       additionalProperties: false
     output_schema:
       type: object
-      properties: {}
-      required: []
+      properties:
+        implementation:
+          type: string
+          const: open
+        protein_sequence: &id001
+          type: string
+        dna_sequence: *id001
+        rna_sequence: *id001
+        naturalness:
+          type: number
+        sampling_seed:
+          type: integer
+        device:
+          type: string
+          const: cpu
+      required:
+      - implementation
+      - protein_sequence
+      - dna_sequence
+      - rna_sequence
+      - naturalness
+      - sampling_seed
+      - device
       additionalProperties: false
-    draft_reason: 输出合同尚未按真实 adapter 结果递归闭合；完成确定性完整路径验证后再暴露
+    description_en: Generate a CDS from a protein sequence with the open Python implementation; return DNA, RNA and model
+      naturalness.
+    doc:
+      parameters_en:
+        "/properties/seed": "Optional random seed; generated results may vary when it is omitted."
+    availability:
+      requires: []
+      role: local
   generate_cds_closed:
-    exposure: draft
-    lifecycle: {kind: local}
+    exposure: exposed
+    lifecycle:
+      kind: local
     resources:
       memory_bytes: 17179869184
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
-      default_storage_bytes: 8388608
+      default_storage_bytes: 67108864
       max_output_bytes: 8388608
-    annotations: *id001
+      cpu_count: 2
+    annotations:
+      readOnlyHint: true
+      destructiveHint: false
+      idempotentHint: false
+      openWorldHint: false
     description: 使用闭源扩展实现从蛋白序列生成 CDS
     input_schema:
       type: object
       properties:
         protein_sequence:
           type: string
+          minLength: 1
+          maxLength: 1024
+          pattern: ^[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy]+\*?$
         seed:
           type: integer
+          minimum: 0
+          maximum: 2147483647
+          description: 可选随机种子；省略时生成结果可能变化。
       required:
       - protein_sequence
       additionalProperties: false
     output_schema:
       type: object
-      properties: {}
-      required: []
+      properties:
+        implementation:
+          type: string
+          const: closed
+        protein_sequence: &id002
+          type: string
+        dna_sequence: *id002
+        rna_sequence: *id002
+        naturalness:
+          type: number
+        sampling_seed:
+          type: integer
+        device:
+          type: string
+          const: cpu
+      required:
+      - implementation
+      - protein_sequence
+      - dna_sequence
+      - rna_sequence
+      - naturalness
+      - sampling_seed
+      - device
       additionalProperties: false
-    draft_reason: 输出合同尚未按真实 adapter 结果递归闭合；完成确定性完整路径验证后再暴露
+    description_en: Generate a CDS from a protein sequence with the compiled extension; return DNA, RNA and model naturalness.
+    doc:
+      parameters_en:
+        "/properties/seed": "Optional random seed; generated results may vary when it is omitted."
+    availability:
+      requires: []
+      role: local
   generate_5utr:
-    exposure: draft
-    lifecycle: {kind: local}
+    exposure: exposed
+    lifecycle:
+      kind: local
     resources:
       memory_bytes: 17179869184
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
-      default_storage_bytes: 8388608
+      default_storage_bytes: 67108864
       max_output_bytes: 8388608
-    annotations: *id001
+      cpu_count: 2
+    annotations:
+      readOnlyHint: true
+      destructiveHint: false
+      idempotentHint: false
+      openWorldHint: false
     description: 生成 5UTR 并用对应 predictor 评分
     input_schema:
       type: object
@@ -91,25 +212,66 @@ functions:
           - long
         seed:
           type: integer
+          minimum: 0
+          maximum: 2147483647
+          description: 可选随机种子；省略时生成结果可能变化。
       required:
       - length
       additionalProperties: false
     output_schema:
       type: object
-      properties: {}
-      required: []
+      properties:
+        utr_type:
+          type: string
+          const: 5utr
+        length:
+          type: string
+          enum:
+          - short
+          - medium
+          - long
+        sequence:
+          type: string
+        score:
+          type: number
+        sampling_seed:
+          type:
+          - integer
+          - 'null'
+        device:
+          type: string
+          const: cpu
+      required:
+      - utr_type
+      - length
+      - sequence
+      - score
+      - sampling_seed
+      - device
       additionalProperties: false
-    draft_reason: 输出合同尚未按真实 adapter 结果递归闭合；完成确定性完整路径验证后再暴露
+    description_en: Generate a 5UTR at a length preset and score it with the 5UTR predictor.
+    doc:
+      parameters_en:
+        "/properties/seed": "Optional random seed; generated results may vary when it is omitted."
+    availability:
+      requires: []
+      role: local
   generate_3utr:
-    exposure: draft
-    lifecycle: {kind: local}
+    exposure: exposed
+    lifecycle:
+      kind: local
     resources:
       memory_bytes: 17179869184
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
-      default_storage_bytes: 8388608
+      default_storage_bytes: 67108864
       max_output_bytes: 8388608
-    annotations: *id001
+      cpu_count: 2
+    annotations:
+      readOnlyHint: true
+      destructiveHint: false
+      idempotentHint: false
+      openWorldHint: false
     description: 生成 3UTR 并用对应 predictor 评分
     input_schema:
       type: object
@@ -122,62 +284,149 @@ functions:
           - long
         seed:
           type: integer
+          minimum: 0
+          maximum: 2147483647
+          description: 可选随机种子；省略时生成结果可能变化。
       required:
       - length
       additionalProperties: false
     output_schema:
       type: object
-      properties: {}
-      required: []
+      properties:
+        utr_type:
+          type: string
+          const: 3utr
+        length:
+          type: string
+          enum:
+          - short
+          - medium
+          - long
+        sequence:
+          type: string
+        score:
+          type: number
+        sampling_seed:
+          type:
+          - integer
+          - 'null'
+        device:
+          type: string
+          const: cpu
+      required:
+      - utr_type
+      - length
+      - sequence
+      - score
+      - sampling_seed
+      - device
       additionalProperties: false
-    draft_reason: 输出合同尚未按真实 adapter 结果递归闭合；完成确定性完整路径验证后再暴露
+    description_en: Generate a 3UTR at a length preset and score it with the 3UTR predictor.
+    doc:
+      parameters_en:
+        "/properties/seed": "Optional random seed; generated results may vary when it is omitted."
+    availability:
+      requires: []
+      role: local
   score_5utr:
-    exposure: draft
-    lifecycle: {kind: local}
+    exposure: exposed
+    lifecycle:
+      kind: local
     resources:
       memory_bytes: 17179869184
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
-      default_storage_bytes: 8388608
+      default_storage_bytes: 67108864
       max_output_bytes: 8388608
-    annotations: *id001
+      cpu_count: 2
+    annotations:
+      readOnlyHint: true
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
     description: 对输入 5UTR 序列评分
     input_schema:
       type: object
       properties:
         sequence:
           type: string
+          minLength: 1
+          maxLength: 4096
+          pattern: ^[ACGUTNacgutn]+$
       required:
       - sequence
       additionalProperties: false
     output_schema:
       type: object
-      properties: {}
-      required: []
+      properties:
+        utr_type:
+          type: string
+          const: 5utr
+        sequence:
+          type: string
+        score:
+          type: number
+        device:
+          type: string
+          const: cpu
+      required:
+      - utr_type
+      - sequence
+      - score
+      - device
       additionalProperties: false
-    draft_reason: 输出合同尚未按真实 adapter 结果递归闭合；完成确定性完整路径验证后再暴露
+    description_en: Score an existing 5UTR sequence with the model; accepts DNA or RNA with optional N.
+    availability:
+      requires: []
+      role: local
   score_3utr:
-    exposure: draft
-    lifecycle: {kind: local}
+    exposure: exposed
+    lifecycle:
+      kind: local
     resources:
       memory_bytes: 17179869184
       default_wall_time_seconds: 600
       max_wall_time_seconds: 7200
-      default_storage_bytes: 8388608
+      default_storage_bytes: 67108864
       max_output_bytes: 8388608
-    annotations: *id001
+      cpu_count: 2
+    annotations:
+      readOnlyHint: true
+      destructiveHint: false
+      idempotentHint: true
+      openWorldHint: false
     description: 对输入 3UTR 序列评分
     input_schema:
       type: object
       properties:
         sequence:
           type: string
+          minLength: 10
+          maxLength: 4096
+          pattern: ^[ACGUTNacgutn]+$
       required:
       - sequence
       additionalProperties: false
     output_schema:
       type: object
-      properties: {}
-      required: []
+      properties:
+        utr_type:
+          type: string
+          const: 3utr
+        sequence:
+          type: string
+        score:
+          type: number
+        device:
+          type: string
+          const: cpu
+      required:
+      - utr_type
+      - sequence
+      - score
+      - device
       additionalProperties: false
-    draft_reason: 输出合同尚未按真实 adapter 结果递归闭合；完成确定性完整路径验证后再暴露
+    description_en: Score an existing 3UTR sequence of at least 10 nucleotides; accepts DNA or RNA with optional N.
+    availability:
+      requires: []
+      role: local
